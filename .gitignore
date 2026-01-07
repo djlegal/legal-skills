@@ -13,3 +13,7 @@ test/
 # Archive directories - ignore content but keep directory structure
 **/archive/*
 !**/archive/.gitkeep
+
+# Config files - ignore sensitive data but keep templates
+**/config/.env
+!**/config/.env.example
