@@ -37,6 +37,17 @@
       "source": ".claude/skills/funasr-transcribe",
       "category": "productivity",
       "tags": ["transcription", "audio", "video", "speech-to-text", "legal"]
+    },
+    {
+      "name": "fetch-wechat-article",
+      "description": "抓取微信公众号文章内容。支持 Playwright headless 模式，自动检测并安装依赖，支持自动重试和错误处理，返回纯文本格式",
+      "version": "0.1.1",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "fetch-wechat-article",
+      "category": "productivity",
+      "tags": ["wechat", "web-scraping", "content-extraction", "playwright", "automation"]
     }
   ]
 }
