@@ -23,10 +23,10 @@ detect_source_type() {
         fi
     # 如果是目录
     elif [ -d "$src" ]; then
-        # 检查是否为 skill（包含 SKILL.md 等）
+        # 优先检查是否为 skill（包含 SKILL.md 等）
         if [ -f "$src/SKILL.md" ] || [ -f "$src/skill.md" ] || [ -d "$src/.claude" ]; then
             echo "skill"
-        # 检查是否为 command 集合目录（包含多个 .md 文件）
+        # 检查是否为 command 集合目录（包含多个 .md 文件，但不包含 SKILL.md）
         else
             local md_count=$(find "$src" -maxdepth 1 -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
             if [ "$md_count" -gt 0 ]; then
@@ -104,36 +104,6 @@ if [ -z "$SOURCE" ]; then
     exit 1
 fi
 
-# 检测源类型（skill 或 command）
-detect_source_type() {
-    local src="$1"
-
-    # 如果是文件
-    if [ -f "$src" ]; then
-        if [[ "$src" =~ \.md$ ]]; then
-            echo "command"
-        else
-            echo "unknown"
-        fi
-    # 如果是目录
-    elif [ -d "$src" ]; then
-        # 检查是否为 skill（包含 SKILL.md 等）
-        if [ -f "$src/SKILL.md" ] || [ -f "$src/skill.md" ] || [ -d "$src/.claude" ]; then
-            echo "skill"
-        # 检查是否为 command 集合目录（包含多个 .md 文件）
-        else
-            local md_count=$(find "$src" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
-            if [ "$md_count" -gt 0 ]; then
-                echo "command-collection"
-            else
-                echo "unknown"
-            fi
-        fi
-    else
-        echo "unknown"
-    fi
-}
-
 # 检查是否为 skills 集合目录
 is_skills_collection() {
     local dir="$1"
@@ -151,13 +121,23 @@ is_skills_collection() {
 }
 
 # 检查是否为 commands 集合目录
+# 注意：必须排除包含 SKILL.md 的 skill 目录
 is_commands_collection() {
     local dir="$1"
     local found_commands=0
 
+    # 如果目录包含 SKILL.md，则不是 commands 集合
+    if [ -f "$dir/SKILL.md" ] || [ -f "$dir/skill.md" ] || [ -d "$dir/.claude" ]; then
+        return 1
+    fi
+
     for item in "$dir"/*; do
         if [ -f "$item" ] && [[ "$item" =~ \.md$ ]]; then
-            ((found_commands++))
+            # 排除 SKILL.md/skill.md 文件
+            local basename=$(basename "$item")
+            if [ "$basename" != "SKILL.md" ] && [ "$basename" != "skill.md" ]; then
+                ((found_commands++))
+            fi
         fi
     done
 
@@ -181,7 +161,7 @@ elif [[ "$SOURCE" =~ ^https?://github\.com/([^/]+)/([^/]+)/tree/([^/]+)/(.+)$ ]]
     SUBPATH="${BASH_REMATCH[4]}"
     SOURCE_TYPE="github-subdir"
     CLONE_URL="https://github.com/$OWNER/$REPO"
-elif [[ "$SOURCE" =~ ^https?://github\.com/([^/]+)/([^/]+?)(\.git)?/?$ ]]; then
+elif [[ "$SOURCE" =~ ^https?://github\.com/([^/]+)/([^/]+)(\.git)?/?$ ]]; then
     # GitHub 仓库根目录
     OWNER="${BASH_REMATCH[1]}"
     REPO="${BASH_REMATCH[2]}"
