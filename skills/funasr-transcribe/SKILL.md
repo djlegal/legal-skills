@@ -2,7 +2,6 @@
 name: funasr-transcribe
 description: 使用本地 FunASR 服务将音频或视频文件转录为带时间戳的 Markdown 文件。支持 mp4、mov、mp3、wav、m4a 等常见格式。用于语音转文字、会议记录、视频字幕、播客转录。
 ---
-
 # FunASR 语音转文字
 
 本 skill 提供本地语音识别服务，将音频或视频文件转换为结构化的 Markdown 文档。
@@ -25,6 +24,7 @@ python scripts/setup.py
 ```
 
 安装脚本会自动：
+
 1. 检查 Python 版本（需要 >= 3.8）
 2. 安装依赖包（FastAPI、Uvicorn、FunASR、PyTorch）
 3. 下载 ASR 模型到 `~/.cache/modelscope/hub/models/`
@@ -141,7 +141,7 @@ curl -X POST http://127.0.0.1:8765/transcribe \
 
 **API 文档（Swagger UI）**：
 
-FastAPI 自动生成交互式 API 文档，访问：<http://127.0.0.1:8765/docs>
+FastAPI 自动生成交互式 API 文档，访问：[http://127.0.0.1:8765/docs](http://127.0.0.1:8765/docs)
 
 可在此页面中：
 
@@ -171,6 +171,7 @@ FastAPI 自动生成交互式 API 文档，访问：<http://127.0.0.1:8765/docs>
 详细的 API 参考文档请查看：<references/api-reference.md>
 
 包含：
+
 - 所有 API 端点的完整规范
 - 请求/响应格式详解
 - 参数说明和示例
@@ -178,18 +179,18 @@ FastAPI 自动生成交互式 API 文档，访问：<http://127.0.0.1:8765/docs>
 
 ## 脚本说明
 
-| 脚本 | 用途 |
-|------|------|
-| `scripts/setup.py` | 一键安装依赖和下载模型 |
-| `scripts/server.py` | 启动 HTTP API 服务 |
-| `scripts/transcribe.py` | 命令行客户端 |
+| 脚本                      | 用途                   |
+| ------------------------- | ---------------------- |
+| `scripts/setup.py`      | 一键安装依赖和下载模型 |
+| `scripts/server.py`     | 启动 HTTP API 服务     |
+| `scripts/transcribe.py` | 命令行客户端           |
 
 ## 配置文件
 
-| 文件 | 说明 |
-|------|------|
-| `assets/models.json` | ASR 模型配置清单 |
-| `assets/requirements.txt` | Python 依赖清单 |
+| 文件                        | 说明             |
+| --------------------------- | ---------------- |
+| `assets/models.json`      | ASR 模型配置清单 |
+| `assets/requirements.txt` | Python 依赖清单  |
 
 ## 输出格式
 
@@ -235,14 +236,3 @@ python scripts/setup.py --verify
 ```bash
 python scripts/setup.py --skip-deps
 ```
-
-## 更新日志
-
-完整的变更历史请查看：<CHANGELOG.md>
-
-包含：
-
-- 版本历史记录
-- 新增功能详情
-- 技术改进说明
-- 架构变更记录
