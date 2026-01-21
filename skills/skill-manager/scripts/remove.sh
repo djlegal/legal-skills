@@ -1,51 +1,101 @@
 #!/bin/bash
 
-# Skill Manager - Remove Script
-# 卸载指定的 skill
+# Skill & Command Manager - Remove Script
+# 卸载指定的 skill 或 command
 
-SKILL_NAME="$1"
+ITEM_NAME="$1"
 # 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_MANAGER_DIR="$(dirname "$SCRIPT_DIR")"
+MANAGER_DIR="$(dirname "$SCRIPT_DIR")"
 
-# 检查 skill-manager 是否在 .claude/skills/ 目录下
-PARENT_DIR="$(dirname "$SKILL_MANAGER_DIR")"
-PARENT_DIR_NAME="$(basename "$PARENT_DIR")"
-if [ "$PARENT_DIR_NAME" = "skills" ]; then
-    # skill-manager 在 .claude/skills/ 下，使用该目录
-    TARGET_DIR="$PARENT_DIR"
-else
-    # 否则，假设 skill-manager/.claude/skills/skill-manager 的结构
-    PROJECT_ROOT="$(dirname "$SKILL_MANAGER_DIR")"
-    TARGET_DIR="$PROJECT_ROOT/.claude/skills"
-fi
+# 查找 .claude 目录
+find_claude_dir() {
+    local current="$MANAGER_DIR"
+    local max_iterations=10
+    local iteration=0
+
+    while [ $iteration -lt $max_iterations ]; do
+        local parent="$(dirname "$current")"
+        local parent_name="$(basename "$parent")"
+
+        if [ "$parent_name" = ".claude" ]; then
+            echo "$parent"
+            return 0
+        fi
+
+        if [ "$parent_name" = "skills" ] || [ "$parent_name" = "commands" ]; then
+            local grandparent="$(dirname "$parent")"
+            local grandparent_name="$(basename "$grandparent")"
+            if [ "$grandparent_name" = ".claude" ]; then
+                echo "$grandparent"
+                return 0
+            fi
+        fi
+
+        current="$parent"
+        ((iteration++))
+    done
+
+    echo "$(dirname "$MANAGER_DIR")/../.claude"
+}
+
+CLAUDE_DIR="$(find_claude_dir)"
+SKILLS_DIR="$CLAUDE_DIR/skills"
+COMMANDS_DIR="$CLAUDE_DIR/commands"
 
 # 检查参数
-if [ -z "$SKILL_NAME" ]; then
-    echo "❌ 错误: 请提供要卸载的 skill 名称"
+if [ -z "$ITEM_NAME" ]; then
+    echo "❌ 错误: 请提供要卸载的 skill 或 command 名称"
     echo ""
-    echo "使用方法: $0 <skill-name>"
+    echo "使用方法: $0 <name>"
     echo ""
-    echo "示例: $0 pdf-tool"
+    echo "示例:"
+    echo "  卸载 skill:    $0 pdf-tool"
+    echo "  卸载 command:  $0 deepresearch"
     exit 1
 fi
 
-TARGET_PATH="$TARGET_DIR/$SKILL_NAME"
+# 查找目标（先找 skill，再找 command）
+SKILL_PATH="$SKILLS_DIR/$ITEM_NAME"
+COMMAND_PATH="$COMMANDS_DIR/$ITEM_NAME.md"
 
-# 检查是否存在
-if [ ! -e "$TARGET_PATH" ]; then
-    echo "❌ 错误: Skill '$SKILL_NAME' 不存在"
+TARGET_PATH=""
+TARGET_TYPE=""
+
+if [ -e "$SKILL_PATH" ]; then
+    TARGET_PATH="$SKILL_PATH"
+    TARGET_TYPE="skill"
+elif [ -e "$COMMAND_PATH" ]; then
+    TARGET_PATH="$COMMAND_PATH"
+    TARGET_TYPE="command"
+else
+    echo "❌ 错误: 未找到 '$ITEM_NAME'"
+    echo "   请确认名称是否正确"
+    exit 1
+fi
+
+# 检查是否是 skill-manager 自身
+if [ "$ITEM_NAME" = "skill-manager" ]; then
+    echo "❌ 错误: 不能卸载 skill-manager 自身"
     exit 1
 fi
 
 # 确认删除
-echo "⚠ 即将卸载: $SKILL_NAME"
-if [ -L "$TARGET_PATH" ]; then
-    echo "   类型: 符号链接"
-elif [ -d "$TARGET_PATH/.git" ]; then
-    echo "   类型: Git 克隆"
+echo "⚠ 即将卸载: $ITEM_NAME"
+if [ "$TARGET_TYPE" = "skill" ]; then
+    if [ -L "$TARGET_PATH" ]; then
+        echo "   类型: 符号链接 (skill)"
+    elif [ -d "$TARGET_PATH/.git" ]; then
+        echo "   类型: Git 克隆 (skill)"
+    else
+        echo "   类型: 本地目录 (skill)"
+    fi
 else
-    echo "   类型: 本地目录"
+    if [ -L "$TARGET_PATH" ]; then
+        echo "   类型: 符号链接 (command)"
+    else
+        echo "   类型: 本地文件 (command)"
+    fi
 fi
 
 echo ""
@@ -64,6 +114,9 @@ if [ -L "$TARGET_PATH" ]; then
 elif [ -d "$TARGET_PATH" ]; then
     rm -rf "$TARGET_PATH"
     echo "✓ 已删除目录"
+elif [ -f "$TARGET_PATH" ]; then
+    rm "$TARGET_PATH"
+    echo "✓ 已删除文件"
 fi
 
-echo "✓ Skill '$SKILL_NAME' 已卸载"
+echo "✓ $TARGET_TYPE '$ITEM_NAME' 已卸载"

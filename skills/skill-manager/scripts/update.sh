@@ -1,27 +1,50 @@
 #!/bin/bash
 
-# Skill Manager - Update Script
-# 更新已安装的 skills
+# Skill & Command Manager - Update Script
+# 更新已安装的 git 克隆的 skills
+# 注意：符号链接的 skills/commands 会自动与源同步，无需更新
 
-SKILL_NAME="$1"
+ITEM_NAME="$1"
 # 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_MANAGER_DIR="$(dirname "$SCRIPT_DIR")"
+MANAGER_DIR="$(dirname "$SCRIPT_DIR")"
 
-# 检查 skill-manager 是否在 .claude/skills/ 目录下
-PARENT_DIR="$(dirname "$SKILL_MANAGER_DIR")"
-PARENT_DIR_NAME="$(basename "$PARENT_DIR")"
-if [ "$PARENT_DIR_NAME" = "skills" ]; then
-    # skill-manager 在 .claude/skills/ 下，使用该目录
-    TARGET_DIR="$PARENT_DIR"
-else
-    # 否则，假设 skill-manager/.claude/skills/skill-manager 的结构
-    PROJECT_ROOT="$(dirname "$SKILL_MANAGER_DIR")"
-    TARGET_DIR="$PROJECT_ROOT/.claude/skills"
-fi
+# 查找 .claude 目录
+find_claude_dir() {
+    local current="$MANAGER_DIR"
+    local max_iterations=10
+    local iteration=0
 
-if [ ! -d "$TARGET_DIR" ]; then
-    echo "❌ 错误: $TARGET_DIR 目录不存在"
+    while [ $iteration -lt $max_iterations ]; do
+        local parent="$(dirname "$current")"
+        local parent_name="$(basename "$parent")"
+
+        if [ "$parent_name" = ".claude" ]; then
+            echo "$parent"
+            return 0
+        fi
+
+        if [ "$parent_name" = "skills" ] || [ "$parent_name" = "commands" ]; then
+            local grandparent="$(dirname "$parent")"
+            local grandparent_name="$(basename "$grandparent")"
+            if [ "$grandparent_name" = ".claude" ]; then
+                echo "$grandparent"
+                return 0
+            fi
+        fi
+
+        current="$parent"
+        ((iteration++))
+    done
+
+    echo "$(dirname "$MANAGER_DIR")/../.claude"
+}
+
+CLAUDE_DIR="$(find_claude_dir)"
+SKILLS_DIR="$CLAUDE_DIR/skills"
+
+if [ ! -d "$SKILLS_DIR" ]; then
+    echo "❌ 错误: $SKILLS_DIR 目录不存在"
     exit 1
 fi
 
@@ -34,11 +57,16 @@ update_skill() {
         echo "▶ 更新: $skill_name"
 
         cd "$skill_path"
-        git fetch -q origin
+        git fetch -q origin 2>/dev/null || {
+            echo "  ❌ 无法获取更新"
+            cd - > /dev/null
+            echo ""
+            return
+        }
         local local_rev=$(git rev-parse HEAD)
-        local remote_rev=$(git rev-parse @{u})
+        local remote_rev=$(git rev-parse @{u} 2>/dev/null)
 
-        if [ "$local_rev" != "$remote_rev" ]; then
+        if [ "$local_rev" != "$remote_rev" ] && [ -n "$remote_rev" ]; then
             git pull -q
             echo "  ✓ 已更新"
         else
@@ -50,13 +78,15 @@ update_skill() {
     fi
 }
 
-if [ -z "$SKILL_NAME" ]; then
+if [ -z "$ITEM_NAME" ]; then
     # 更新所有 git 克隆的 skills
     echo "🔄 更新所有 Git 克隆的 skills..."
     echo ""
+    echo "注意: 符号链接的 skills/commands 会自动与源同步，无需手动更新"
+    echo ""
 
     count=0
-    for item in "$TARGET_DIR"/*; do
+    for item in "$SKILLS_DIR"/*; do
         if [ -d "$item/.git" ]; then
             update_skill "$item"
             ((count++))
@@ -70,15 +100,21 @@ if [ -z "$SKILL_NAME" ]; then
     fi
 else
     # 更新指定 skill
-    TARGET_PATH="$TARGET_DIR/$SKILL_NAME"
+    TARGET_PATH="$SKILLS_DIR/$ITEM_NAME"
 
     if [ ! -e "$TARGET_PATH" ]; then
-        echo "❌ 错误: Skill '$SKILL_NAME' 不存在"
+        echo "❌ 错误: Skill '$ITEM_NAME' 不存在"
         exit 1
     fi
 
+    if [ -L "$TARGET_PATH" ]; then
+        echo "ℹ '$ITEM_NAME' 是符号链接，会自动与源同步，无需手动更新"
+        echo "   指向: $(readlink "$TARGET_PATH")"
+        exit 0
+    fi
+
     if [ ! -d "$TARGET_PATH/.git" ]; then
-        echo "❌ 错误: '$SKILL_NAME' 不是 Git 克隆的 skill，无法更新"
+        echo "❌ 错误: '$ITEM_NAME' 不是 Git 克隆的 skill，无法更新"
         exit 1
     fi
 

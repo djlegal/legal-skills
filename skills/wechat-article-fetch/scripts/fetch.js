@@ -5,10 +5,40 @@
  * 使用 Playwright headless 模式,无弹窗后台抓取
  * 自动检测并安装 Playwright
  *
- * 用法: node fetch.js <URL>
+ * 用法: node fetch.js <URL> [output.md]
  */
 
 import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname, join, basename } from 'path';
+import { writeFile, mkdir, stat } from 'fs/promises';
+import { existsSync } from 'fs';
+
+// 获取当前文件路径（兼容 Windows）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// 检测平台
+const isWindows = process.platform === 'win32';
+
+// 获取适当的命令和参数
+function getNpxCommand() {
+  if (isWindows) {
+    // Windows: 使用 cmd.exe
+    return {
+      command: 'cmd',
+      args: ['/c', 'npx', '-y', 'playwright', 'install', 'chromium'],
+      shell: false
+    };
+  } else {
+    // Unix-like: 直接使用 npx
+    return {
+      command: 'npx',
+      args: ['-y', 'playwright', 'install', 'chromium'],
+      shell: false
+    };
+  }
+}
 
 // 检查并安装 Playwright
 async function ensurePlaywright() {
@@ -21,10 +51,12 @@ async function ensurePlaywright() {
     console.log('这可能需要几分钟时间,请耐心等待...\n');
 
     return new Promise((resolve, reject) => {
+      const { command, args, shell } = getNpxCommand();
+
       // 安装 playwright
-      const install = spawn('npx', ['-y', 'playwright', 'install', 'chromium'], {
+      const install = spawn(command, args, {
         stdio: 'inherit',
-        shell: true
+        shell
       });
 
       install.on('close', (code) => {
@@ -36,27 +68,53 @@ async function ensurePlaywright() {
           reject(new Error('Playwright installation failed'));
         }
       });
+
+      install.on('error', (err) => {
+        console.error('\n❌ 启动安装进程失败:', err.message);
+        reject(err);
+      });
     });
   }
 }
 
-async function fetchWechatArticle(url, retries = 3) {
+async function fetchWechatArticle(url, retries = 3, autoSavePath = null) {
   // 确保 Playwright 已安装
   await ensurePlaywright();
 
   // 动态导入 playwright
   const { chromium } = await import('playwright');
 
+  // 首先尝试无头模式
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`尝试 ${attempt}/${retries}: 抓取 ${url}`);
-      const result = await attemptFetch(chromium, url);
+      const result = await attemptFetch(chromium, url, { headless: true });
       console.log('✅ 抓取成功！');
+
+      // 如果指定了保存路径，保存为 Markdown 文件
+      if (autoSavePath) {
+        await saveAsMarkdown(result, autoSavePath);
+      }
+
       return result;
     } catch (error) {
       console.error(`❌ 尝试 ${attempt} 失败:`, error.message);
       if (attempt === retries) {
-        throw error;
+        console.log('⚠️  无头模式失败，尝试使用有头模式...');
+        try {
+          const result = await attemptFetch(chromium, url, { headless: false });
+          console.log('✅ 有头模式抓取成功！');
+
+          // 如果指定了保存路径，保存为 Markdown 文件
+          if (autoSavePath) {
+            await saveAsMarkdown(result, autoSavePath);
+          }
+
+          return result;
+        } catch (headedError) {
+          console.error('❌ 有头模式也失败了:', headedError.message);
+          throw headedError;
+        }
       }
       console.log(`⏳ 等待 3 秒后重试...`);
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -64,9 +122,11 @@ async function fetchWechatArticle(url, retries = 3) {
   }
 }
 
-async function attemptFetch(chromium, url) {
+async function attemptFetch(chromium, url, options = {}) {
+  const { headless = true } = options;
+
   const browser = await chromium.launch({
-    headless: true,
+    headless,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -170,9 +230,83 @@ async function attemptFetch(chromium, url) {
   }
 }
 
+/**
+ * 将抓取的文章保存为 Markdown 文件
+ * @param {Object} article - 文章对象 {title, content, url}
+ * @param {string} outputPath - 输出文件路径
+ */
+async function saveAsMarkdown(article, outputPath) {
+  try {
+    // 规范化文件名（移除非法字符）
+    const safeTitle = article.title
+      .replace(/[<>:"/\\|?*]/g, '') // 移除 Windows 非法字符
+      .replace(/\s+/g, '_') // 空格替换为下划线
+      .substring(0, 100); // 限制长度
+
+    // 如果 outputDir 是目录，则使用标题作为文件名
+    let finalPath = outputPath;
+    if (existsSync(outputPath) && (await import('fs/promises')).then(fs => fs.stat(outputPath)).then(s => s.isDirectory())) {
+      finalPath = join(outputPath, `${safeTitle}.md`);
+    }
+
+    // 确保目录存在
+    const dir = dirname(finalPath);
+    if (!existsSync(dir)) {
+      await mkdir(dir, { recursive: true });
+    }
+
+    // 生成 Markdown 内容
+    const markdown = `# ${article.title}
+
+> 原文链接: ${article.url}
+> 抓取时间: ${new Date().toLocaleString('zh-CN')}
+
+---
+
+${article.content}
+`;
+
+    // 写入文件
+    await writeFile(finalPath, markdown, 'utf-8');
+    console.log(`✅ 文章已保存到: ${finalPath}`);
+
+    return finalPath;
+  } catch (error) {
+    console.error('❌ 保存文件失败:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * 检测是否为主模块（兼容 Windows）
+ */
+function isMainModuleCheck() {
+  try {
+    // 方法1: 直接路径比较（Windows 兼容）
+    const mainPath = fileURLToPath(import.meta.url);
+    const argvPath = process.argv[1];
+
+    // 规范化路径后再比较
+    const normalizedMain = mainPath.replace(/\\/g, '/');
+    const normalizedArgv = argvPath.replace(/\\/g, '/');
+
+    if (normalizedMain === normalizedArgv) {
+      return true;
+    }
+
+    // 方法2: 检查是否包含文件名（备用方案）
+    const mainFileName = basename(mainPath);
+    const argvFileName = basename(argvPath);
+
+    return mainFileName === argvFileName && argvFileName.includes('fetch.js');
+  } catch (error) {
+    // 如果路径检测失败，回退到简单检查
+    return process.argv[1].includes('fetch.js');
+  }
+}
+
 // 命令行调用
-const isMainModule = import.meta.url === `file://${process.argv[1]}` ||
-                    import.meta.url.startsWith('file://') && process.argv[1].includes('fetch.js');
+const isMainModule = isMainModuleCheck();
 
 if (isMainModule) {
   const url = process.argv[2];
