@@ -20,28 +20,39 @@
 
 来自 Claude Code 官方的通用技能：
 
-| 技能                                   | 说明                                         |
-| :------------------------------------- | :------------------------------------------- |
-| **[skill-creator](skills/skill-creator/)** | 技能创建指南和工具集                         |
-| **[pdf](skills/pdf/)**                     | PDF 处理工具包：文本提取、表单填写、合并拆分 |
+| 技能 | 说明 |
+| :--- | :--- |
+| **[skill-creator](skills/skill-creator/)** | 技能创建指南和工具集 |
+| **[pdf](skills/pdf/)** | PDF 处理工具包：文本提取、表单填写、合并拆分 |
 
 ### 自研技能
 
-面向法律场景定制开发的技能：
+面向法律工作场景定制开发的技能：
+
+#### 🔧 工具类
+
+文件处理、格式转换、媒体处理等通用工具：
 
 | 技能 | 说明 | 状态 |
 | :--- | :--- | :--- |
-| **[skill-manager](skills/skill-manager/)** | 管理 Claude Skills 的安装、同步、卸载和列表查看 | ✅ v1.0.0 |
 | **[funasr-transcribe](skills/funasr-transcribe/)** | 本地语音转文字，支持会议记录、视频字幕、播客转录 | ✅ v1.1.1 |
 | **[mineru-ocr](skills/mineru-ocr/)** | PDF/图片转 Markdown，支持 OCR、表格和公式识别 | ✅ v1.0.1 |
 | **[piclist-upload](skills/piclist-upload/)** | 将 Markdown 中的本地图片上传到图床，自动替换为云端链接 | ✅ v1.1.0 |
 | **[wechat-article-fetch](skills/wechat-article-fetch/)** | 抓取微信公众号文章内容，支持自动重试和错误处理 | 🧪 v0.1.1 |
 
-### 其他创作者技能
+#### 📚 开发类
 
-来自社区贡献的技能：
+技能开发、插件管理等开发工具：
 
-> 暂无，欢迎贡献！
+| 技能 | 说明 | 状态 |
+| :--- | :--- | :--- |
+| **[skill-manager](skills/skill-manager/)** | 管理 Claude Skills 的安装、同步、卸载和列表查看 | ✅ v1.0.0 |
+
+#### ⚖️ 法律类
+
+面向法律业务场景的专业技能（如证据分析、文书生成等）：
+
+> 🚧 筹备中，欢迎贡献！
 
 ## 📖 协作规范
 
