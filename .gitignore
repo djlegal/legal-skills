@@ -17,6 +17,10 @@ test/
 # Config files - ignore sensitive data but keep templates
 **/config/.env
 !**/config/.env.example
+
+# User profile - ignore personal data but keep example
+**/reference/user-profile.md
+!**/reference/user-profile.example.md
 .history/
 
 # Node.js dependencies
@@ -24,3 +28,18 @@ test/
 
 /images/
 /others/
+
+# PDF files in root directory only
+/*.pdf
+
+# Word template files with Chinese names
+skills/md2word/assets/templates/剑桥颐华律所模板.docx
+
+# Word files in root directory only
+/*.docx
+/*.doc
+
+# Python cache files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
