@@ -1,0 +1,169 @@
+---
+name: git-batch-commit
+description: 智能 Git 批量提交工具，自动将混合的文件修改按类型分类（依赖管理、文档更新、license 文件、配置、源代码等），并创建多个清晰聚焦的提交，使用标准化的提交信息格式。当用户暂存了多个不同类型的文件需要分开提交时使用，或者当用户创建包含混合文件类型的提交时（例如同时修改了文档、代码和依赖）。帮助保持清晰的 Git 历史，确保每个提交都有单一、明确的目的。支持的提交类型包括 Docs、Feat、Fix、Chore、License、Refactor、Config、Test、Style。
+---
+
+# Git 批量提交工具
+
+## 概述
+
+将混合的修改自动拆分为多个聚焦的、逻辑清晰的提交。而不是创建一个包含"更新各种文件"的大提交，而是创建多个清晰的提交，如"Docs: 更新 README"、"Chore: 更新依赖"、"License: 更新 license 文件"。
+
+## 使用场景
+
+- 用户暂存的文件来自多个类别（文档 + 代码 + 配置）
+- 用户希望保持清晰、标准化的提交历史
+- 用户提到"批量提交"、"拆分提交"或"整理提交"
+- 用户修改了许多文件，希望按逻辑分组
+
+## 快速开始
+
+### 方式一：使用交互式脚本
+
+```bash
+# 首先暂存你的文件
+git add file1.py file2.md package.json
+
+# 运行交互式批量提交工具
+python3 skills/git-batch-commit/scripts/interactive_commit.py
+```
+
+脚本将：
+
+1. 分析已暂存的文件
+2. 按类别分组
+3. 显示提议的提交和提交信息
+4. 请求确认
+5. 创建提交
+
+### 方式二：手动分类
+
+```bash
+# 查看变更如何被分类
+python3 skills/git-batch-commit/scripts/categorize_changes.py
+
+# 或以 JSON 格式输出
+python3 skills/git-batch-commit/scripts/categorize_changes.py --json
+```
+
+## 提交分类
+
+| 类型 | 描述 | 示例文件 |
+|------|-------------| ---------------|
+| **Docs** | 文档变更 | `*.md`、`README*`、`CHANGELOG*`、`docs/` |
+| **Feat** | 新功能 | 添加了新内容的源文件 |
+| **Fix** | Bug 修复 | 包含修复关键字的源文件 |
+| **Refactor** | 代码重构 | 删除内容多于添加的源文件 |
+| **Style** | 代码风格 | 格式化或小改动的源文件 |
+| **Chore** | 依赖和工具 | `package.json`、`Makefile`、`.github/` |
+| **License** | License 更新 | `LICENSE`、`LICENSE.txt` |
+| **Config** | 配置文件 | `*.env.*`、`*.yaml`、`config/` |
+| **Test** | 测试变更 | `test_*.py`、`*_test.go`、`test/` |
+
+## 提交信息格式
+
+所有提交遵循格式：**`<类型>: <描述>`**
+
+示例：
+
+```text
+Docs: 更新 README 文档
+Feat: 添加用户认证功能
+Fix: 修复解析器内存泄漏
+Chore: 更新依赖
+License: 更新 license 文件
+Refactor: 简化数据层
+Config: 更新环境配置
+Test: 添加解析器单元测试
+```
+
+## 工作流程
+
+1. **暂存文件** - 使用 `git add` 正常暂存
+2. **运行交互式脚本** - 查看分类结果
+3. **审核** - 检查提议的提交分组
+4. **确认** - 创建提交或取消以调整
+5. **完成** - 获得清晰历史的聚焦提交
+
+## 实现说明
+
+分类使用两遍扫描方法：
+
+1. **文件模式匹配** - 文件按路径和扩展名模式分类
+2. **Diff 内容分析** - 对于源代码，分析实际的 git diff 以区分功能、修复、重构和风格变更
+
+检测规则：
+
+- **Fix**: diff 中包含 "fix"、"bug"、"error" 等关键字
+- **Feat**: diff 中包含 "add"、"new"、"implement" 等关键字且添加多于删除
+- **Refactor**: 删除多于添加
+- **Style**: 添加和删除平衡（源文件默认）
+
+## 资源文件
+
+### scripts/
+
+- **`categorize_changes.py`** - 分析 git diff 并按类别分组文件
+- **`generate_commit_message.py`** - 生成约定式提交信息
+- **`interactive_commit.py`** - 批量提交的主交互式工具
+
+### references/
+
+- **`commit-types.md`** - 详细的类别定义和检测逻辑
+- **`conventional-commits.md`** - 提交信息规范
+
+## 使用示例
+
+```bash
+$ git add *.py *.md requirements.txt
+$ python3 skills/git-batch-commit/scripts/interactive_commit.py
+
+Git 批量提交工具
+============================================================
+发现 5 个已暂存文件
+
+============================================================
+提议的提交分组
+============================================================
+
+[分组 1] Chore: 更新 Python 依赖
+类别: deps
+文件 (1):
+  - requirements.txt
+
+[分组 2] Docs: 更新 README 文档
+类别: docs
+文件 (1):
+  - README.md
+
+[分组 3] Feat: 添加新功能
+类别: feat
+文件 (3):
+  - src/parser.py
+  - src/utils.py
+  - tests/test_parser.py
+
+============================================================
+
+选项:
+  y - 是，创建这些提交
+  n - 否，取消
+  e - 编辑分组（手动模式）
+
+是否继续创建这些提交？ [y/n/e]: y
+
+正在创建提交...
+
+  → Chore: 更新 Python 依赖
+    ✓ 已提交 1 个文件
+
+  → Docs: 更新 README 文档
+    ✓ 已提交 1 个文件
+
+  → Feat: 添加新功能
+    ✓ 已提交 3 个文件
+
+============================================================
+批量提交完成：3/3 个提交已创建
+============================================================
+```
