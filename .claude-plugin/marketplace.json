@@ -1,15 +1,141 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "legal-skills",
+  "version": "1.1.0",
+  "description": "面向法律从业者的 Claude Skills 集合，支持从内容获取、处理到专业写作的全流程 AI 协作",
   "owner": {
     "name": "杨卫薪律师（微信ywxlaw）",
     "email": "ywxlaw"
   },
+  "homepage": "https://github.com/cat-xierluo/legal-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cat-xierluo/legal-skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cat-xierluo/legal-skills/issues"
+  },
   "plugins": [
     {
-      "name": "legal-skills",
-      "source": "./",
-      "description": "面向法律从业者的 Claude Skills 集合，包含文档转换、音频转录、网页抓取等专业工具",
-      "version": "1.0.0"
+      "name": "legal-text-format",
+      "description": "将法律文本（法律条文或法律案例）转换为规范的 Markdown 格式",
+      "version": "1.1.0",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/legal-text-format",
+      "category": "productivity",
+      "tags": ["legal", "formatting", "markdown"]
+    },
+    {
+      "name": "legal-qa-extractor",
+      "description": "从律师与客户沟通记录中提取有价值的法律问答对，生成结构化知识库内容。支持严格客户信息脱敏处理",
+      "version": "1.0.0",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/legal-qa-extractor",
+      "category": "productivity",
+      "tags": ["legal", "qa", "knowledge", "consultation"]
+    },
+    {
+      "name": "wechat-article-fetch",
+      "description": "使用 Playwright 无头模式抓取微信公众号文章，支持动态加载内容",
+      "version": "1.1.0",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/wechat-article-fetch",
+      "category": "productivity",
+      "tags": ["wechat", "scraper", "markdown"]
+    },
+    {
+      "name": "mineru-ocr",
+      "description": "通过 MinerU API 将 PDF、图片等文档转换为 Markdown，支持 OCR 文字识别",
+      "version": "1.0.1",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/mineru-ocr",
+      "category": "productivity",
+      "tags": ["ocr", "pdf", "conversion"]
+    },
+    {
+      "name": "funasr-transcribe",
+      "description": "本地语音识别服务，将音频/视频转录为带时间戳的 Markdown",
+      "version": "1.1.1",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/funasr-transcribe",
+      "category": "productivity",
+      "tags": ["transcription", "audio", "video"]
+    },
+    {
+      "name": "course-generator",
+      "description": "从多个文献内容中系统化提取并生成结构化课程",
+      "version": "1.1.0",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/course-generator",
+      "category": "productivity",
+      "tags": ["course", "education", "content"]
+    },
+    {
+      "name": "svg-article-illustrator",
+      "description": "AI 驱动的 SVG 文章配图生成工具，支持动态 SVG、静态 SVG 和 PNG 导出",
+      "version": "1.0.1",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/svg-article-illustrator",
+      "category": "productivity",
+      "tags": ["svg", "illustration", "graphics"]
+    },
+    {
+      "name": "piclist-upload",
+      "description": "通过 PicList HTTP Server 将 Markdown 中的本地图片上传到图床",
+      "version": "1.1.1",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/piclist-upload",
+      "category": "productivity",
+      "tags": ["image", "upload", "markdown"]
+    },
+    {
+      "name": "md2word",
+      "description": "将 Markdown 文档转换为专业格式 Word 文档，支持法律文书标准",
+      "version": "0.2.0",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/md2word",
+      "category": "productivity",
+      "tags": ["markdown", "word", "conversion"]
+    },
+    {
+      "name": "skill-manager",
+      "description": "管理 Claude Skills 和 Commands 的安装、同步、卸载和列表查看",
+      "version": "1.1.0",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/skill-manager",
+      "category": "developer-tools",
+      "tags": ["skill", "management", "cli"]
+    },
+    {
+      "name": "git-batch-commit",
+      "description": "智能 Git 批量提交工具，自动将混合的文件修改按类型分类",
+      "version": "1.0.0",
+      "author": {
+        "name": "杨卫薪律师（微信ywxlaw）"
+      },
+      "source": "skills/git-batch-commit",
+      "category": "developer-tools",
+      "tags": ["git", "commit", "automation"]
     }
   ]
 }
