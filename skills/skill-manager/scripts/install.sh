@@ -6,6 +6,8 @@
 set -e
 
 SOURCE="$1"
+# 保存调用者的原始工作目录（关键：用于定位项目 .claude 目录）
+ORIGINAL_PWD="$PWD"
 # 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANAGER_DIR="$(dirname "$SCRIPT_DIR")"
@@ -43,8 +45,8 @@ detect_source_type() {
 # 检测目标目录（支持 skills 和 commands）
 # 优先从当前工作目录查找 .claude，适用于在项目内调用
 find_claude_dir() {
-    # 首先尝试从当前工作目录查找（项目本地）
-    local current="$PWD"
+    # 首先尝试从调用者的原始工作目录查找（项目本地）
+    local current="$ORIGINAL_PWD"
     local max_iterations=10
     local iteration=0
 
