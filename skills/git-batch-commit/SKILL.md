@@ -76,7 +76,9 @@ python3 skills/git-batch-commit/scripts/categorize_changes.py --json
 
 使用英文前缀加中文内容，确保 GitHub 能识别并显示彩色标签。
 
-示例：
+### 单一项目仓库
+
+对于只包含一个项目的仓库：
 
 ```text
 docs: 更新 README 文档
@@ -88,6 +90,22 @@ refactor: 简化数据层
 config: 更新环境配置
 test: 添加解析器单元测试
 ```
+
+### Multi-Module/Multi-Skill 仓库
+
+对于包含多个独立模块或技能的仓库（如 skills 仓库），**描述中应包含模块名称**以确保聚焦：
+
+```text
+docs: course-generator 更新 CHANGELOG
+fix: skill-manager 修复符号链接创建位置问题
+docs: legal-proposal-generator 优化模板文档
+fix: svg-article-illustrator 修复 PNG 导出问题
+```
+
+**重要规则**：
+- 如果一次修改涉及多个模块，**必须按模块分别提交**
+- 每个提交只包含一个模块的变更
+- 描述中的模块名称使用原始英文名称，不要翻译
 
 ## 工作流程
 
