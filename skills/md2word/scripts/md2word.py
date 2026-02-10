@@ -1125,10 +1125,10 @@ def create_word_table_from_html(doc, html_content):
     print(f"✅ 处理HTML表格: {len(rows_data)} 行")
 
 def convert_quotes_to_chinese(text):
-    """将英文引号转换为中文引号（改进版）
+    """将英文引号转换为中文引号（交替状态机版）
     规则：
-    - 将直双引号 " 转为中文开/闭引号 “ ”（使用简单语境+切换判断）
-    - 将直单引号 ' 转为中文开/闭引号 ‘ ’，但保留英文缩写/所有格中的撇号（如 don't, John's）
+    - 将直双引号 " 转为中文开/闭引号 " "（交替状态：开→闭→开→闭...）
+    - 将直单引号 ' 转为中文开/闭引号 ' '，但保留英文缩写/所有格中的撇号（如 don't, John's）
     - 避免转换代码片段中的引号（由反引号 ` 包裹）
     """
     if not text:
@@ -1143,6 +1143,10 @@ def convert_quotes_to_chinese(text):
     result = []
     i = 0
     in_code = False  # 是否处于 `code` 片段中
+
+    # 交替状态机：0=等待开引号，1=等待闭引号
+    double_quote_state = 0
+    single_quote_state = 0
 
     while i < len(text):
         ch = text[i]
@@ -1160,26 +1164,19 @@ def convert_quotes_to_chinese(text):
             continue
 
         if in_code:
-            # 代码片段内不做引号替换
+            # 代码片段内不做引号更换
             result.append(ch)
             i += 1
             continue
 
         if ch == '"':
-            # 判断前一个非空白字符，以推断开/闭引号
-            k = len(result) - 1
-            prev_char = None
-            while k >= 0:
-                pc = result[k]
-                if not pc.isspace():
-                    prev_char = pc
-                    break
-                k -= 1
-            # 若前面为空/是开括号/标点，则更可能是开引号
-            if prev_char is None or prev_char in '([{<（【《“‘\t\n "\'\-—:;,.!?、，。；：！？”）〉》»…':
-                result.append('“')
+            # 使用交替状态机：第一个是开引号，第二个是闭引号，以此类推
+            if double_quote_state == 0:
+                result.append('\u201c')  # 中文开双引号 "
+                double_quote_state = 1  # 下一个是闭引号
             else:
-                result.append('”')
+                result.append('\u201d')  # 中文闭双引号 "
+                double_quote_state = 0  # 重置，下一个是开引号
             i += 1
             continue
 
@@ -1192,19 +1189,13 @@ def convert_quotes_to_chinese(text):
                 i += 1
                 continue
 
-            # 判断前一个非空白字符，以推断开/闭单引号
-            k = len(result) - 1
-            prev_char = None
-            while k >= 0:
-                pc = result[k]
-                if not pc.isspace():
-                    prev_char = pc
-                    break
-                k -= 1
-            if prev_char is None or prev_char in '([{<（【《“\t\n "\'\-—:;,.!?、，。；：！？”）〉》»…':
-                result.append('‘')
+            # 使用交替状态机
+            if single_quote_state == 0:
+                result.append('\u2018')  # 中文开单引号 '
+                single_quote_state = 1
             else:
-                result.append('’')
+                result.append('\u2019')  # 中文闭单引号 '
+                single_quote_state = 0
             i += 1
             continue
 
