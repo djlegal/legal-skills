@@ -47,8 +47,21 @@ detect_source_type() {
 find_claude_dir() {
     # 首先尝试从调用者的原始工作目录查找（项目本地）
     local current="$ORIGINAL_PWD"
+    local current_name="$(basename "$current")"
     local max_iterations=10
     local iteration=0
+
+    # 如果当前目录本身就是 .claude，直接使用
+    if [ "$current_name" = ".claude" ]; then
+        echo "$current"
+        return 0
+    fi
+
+    # 如果当前目录包含 skills 子目录，说明当前目录就是 .claude 目录
+    if [ -d "$current/skills" ]; then
+        echo "$current"
+        return 0
+    fi
 
     while [ $iteration -lt $max_iterations ]; do
         # 检查当前目录是否包含 .claude 子目录
