@@ -195,8 +195,7 @@ def init_model(with_speaker: bool = False):
             model="iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
             vad_model="iic/speech_fsmn_vad_zh-cn-16k-common-pytorch",
             punc_model="iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch",
-            spk_model="damo/speech_campplus_speaker-diarization_common",
-            spk_model_revision="master",
+            spk_model="cam++",
             disable_update=True,
             disable_log=False,
         )
@@ -258,7 +257,7 @@ def result_to_markdown(result: dict, filename: str, diarize: bool = False) -> st
         for seg in segments:
             start_ms = seg.get('start', 0)
             text = seg.get('sentence', seg.get('text', ''))
-            spk = seg.get('speaker') if diarize else None
+            spk = seg.get('spk') if diarize else None
 
             if current is None:
                 current = {
@@ -310,11 +309,11 @@ def result_to_markdown(result: dict, filename: str, diarize: bool = False) -> st
 
             if spk is not None:
                 # 有说话人信息
-                if spk.startswith('speaker_'):
+                if isinstance(spk, str) and spk.startswith('speaker_'):
                     speaker_num = int(spk.split('_')[1]) + 1
                     speaker = f"发言人{speaker_num}"
                 else:
-                    # 使用映射后的编号
+                    # 使用映射后的编号（支持整数类型的 spk）
                     speaker = f"发言人{spk_map.get(spk, 1)}"
                 md_lines.append(f"{speaker} {start_ts}\n")
             else:
