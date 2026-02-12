@@ -46,3 +46,6 @@ skills/md2word/assets/templates/剑桥颐华律所模板.docx
 **/__pycache__/
 **/*.pyc
 **/*.pyo
+
+# Skill downloads/output directories
+skills/*/downloads/
