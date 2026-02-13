@@ -292,12 +292,17 @@ def analyze_markdown_changes(added: List[str], removed: List[str], filename: str
         header_text = added_headers[0].lstrip('#').strip()
         return f"更新 {filename} - 添加 {header_text} 部分"
 
-    # Check for skill additions
-    if 'skills/' in filename or 'SKILL' in filename:
+    # SKILL.md is a skill core file, treat differently from regular docs
+    if filename == 'SKILL.md':
+        # Extract skill name from path if available
+        return f"更新技能定义文件"
+
+    # Check for skill file changes (skills/xxx/SKILL.md)
+    if 'SKILL.md' in filename or 'skills/' in filename:
         skill_name = filename.split('/')[-1].replace('.md', '')
         if '添加' in ' '.join(added) or '新增' in ' '.join(added):
-            return f"添加 {skill_name} 技能文档"
-        return f"更新 {skill_name} 技能文档"
+            return f"添加 {skill_name} 技能"
+        return f"更新 {skill_name} 技能"
 
     # Check for doc updates
     if added:

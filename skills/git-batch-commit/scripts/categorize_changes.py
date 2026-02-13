@@ -97,6 +97,13 @@ FILE_PATTERNS = {
     ],
 }
 
+# Skill core files that should be treated as code, not docs
+# These define behavior/functionality, not just documentation
+SKILL_CORE_FILES = [
+    r'SKILL\.md$',           # Skill definition file (defines behavior)
+    r'skills/.*/SKILL\.md$', # Skill files in skills directory
+]
+
 # Source code extensions
 SOURCE_EXTENSIONS = [
     r'\.py$', r'\.js$', r'\.ts$', r'\.tsx$', r'\.jsx$',
@@ -132,6 +139,12 @@ def get_unstaged_files() -> List[str]:
 
 def categorize_file(filepath: str) -> str:
     """Categorize a file based on its path and patterns."""
+    # Special handling for skill core files
+    # SKILL.md defines behavior/functionality, should be treated as code, not docs
+    for pattern in SKILL_CORE_FILES:
+        if re.search(pattern, filepath):
+            return 'code'
+
     # Check each category's patterns
     for category, patterns in FILE_PATTERNS.items():
         for pattern in patterns:
