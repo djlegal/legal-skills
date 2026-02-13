@@ -70,6 +70,22 @@ python3 skills/git-batch-commit/scripts/categorize_changes.py --json
 | **config** | 配置文件 | `*.env.*`、`*.yaml`、`config/` |
 | **test** | 测试变更 | `test_*.py`、`*_test.go`、`test/` |
 
+### ⚠️ 技能核心文件的特殊处理
+
+**重要规则**：`SKILL.md` 虽然是 Markdown 格式，但它是**技能的核心功能文件**，不应归类为 `docs` 类型。
+
+| 文件类型 | 正确分类 | 理由 |
+|:---------|:---------|:-----|
+| `SKILL.md` | `feat`/`style`/`fix` | 技能核心文件，修改它相当于修改功能/代码 |
+| `AGENTS.md` | `docs` | 项目协作规范，属于文档 |
+| `DECISIONS.md` | `docs` | 决策记录，属于文档 |
+| `CHANGELOG.md` | `docs` | 变更日志，属于文档 |
+| `TASKS.md` | `docs` | 任务列表，属于文档 |
+
+**判断依据**：
+- 如果修改的是**定义行为/功能**的文件（如 `SKILL.md`、`.py`、`.ts`），视为代码变更
+- 如果修改的是**记录/说明**性质的文件（如 `README.md`、`CHANGELOG.md`），视为文档变更
+
 ## 提交信息格式
 
 所有提交遵循格式：**`<类型>: <描述>`**
