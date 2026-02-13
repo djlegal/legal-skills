@@ -194,16 +194,20 @@ def analyze_changes(files: List[str], category: str) -> str:
 
 def generate_commit_message(category: str, files: List[str]) -> str:
     """
-    生成约定式提交信息。
+    生成约定式提交信息，包含详细信息。
 
-    格式：<type>: <描述>（使用英文冒号）
+    格式：
+    <type>: <描述>
+
+    - 详细变更说明1
+    - 详细变更说明2
 
     Args:
         category: 变更类别 (deps, docs, feat 等)
         files: 该类别中的变更文件列表
 
     Returns:
-        格式化的提交信息
+        格式化的提交信息（包含详细信息）
     """
     # Get commit type
     commit_type = CATEGORY_TO_TYPE.get(category, 'chore')
@@ -211,8 +215,75 @@ def generate_commit_message(category: str, files: List[str]) -> str:
     # Generate description
     description = analyze_changes(files, category)
 
+    # Generate detailed body based on files
+    detail_lines = generate_detail_lines(files, category)
+
     # Format: type: description (使用英文冒号以支持 GitHub 彩色标签)
-    return f"{commit_type}: {description}"
+    message = f"{commit_type}: {description}"
+
+    # Add detail lines if available
+    if detail_lines:
+        message += "\n\n" + detail_lines
+
+    return message
+
+
+def generate_detail_lines(files: List[str], category: str) -> str:
+    """
+    根据变更文件生成详细信息行。
+
+    Args:
+        files: 变更文件列表
+        category: 变更类别
+
+    Returns:
+        详细信息字符串
+    """
+    lines = []
+
+    for filepath in files:
+        filename = filepath.split('/')[-1]
+
+        # Generate specific detail for each file
+        if category == 'docs':
+            if filename.endswith('.md'):
+                doc_name = filename.replace('.md', '')
+                lines.append(f"- 更新 {doc_name} 文档")
+            else:
+                lines.append(f"- 更新 {filename}")
+        elif category == 'chore':
+            if '.gitignore' in filepath:
+                lines.append("- 更新 gitignore 忽略规则")
+            elif 'SKILL.md' in filepath:
+                skill_name = filepath.split('skills/')[1].split('/')[0] if 'skills/' in filepath else 'unknown'
+                lines.append(f"- 更新 {skill_name} 技能文档")
+            else:
+                lines.append(f"- 更新 {filename}")
+        elif category == 'feat' or category == 'style':
+            if 'skills/' in filepath:
+                skill_name = filepath.split('skills/')[1].split('/')[0]
+                lines.append(f"- 添加 {skill_name} 技能")
+            elif 'scripts/' in filepath:
+                script_name = filepath.split('scripts/')[1].split('/')[0]
+                lines.append(f"- 添加 {script_name} 脚本")
+            else:
+                lines.append(f"- 更新 {filename}")
+        elif category == 'fix':
+            lines.append(f"- 修复 {filename} 中的问题")
+        elif category == 'refactor':
+            lines.append(f"- 重构 {filename}")
+        elif category == 'config':
+            lines.append(f"- 更新 {filename} 配置")
+        elif category == 'deps':
+            lines.append(f"- 更新 {filename} 依赖")
+        elif category == 'test':
+            lines.append(f"- 更新 {filename} 测试")
+        elif category == 'license':
+            lines.append(f"- 更新许可证文件")
+        else:
+            lines.append(f"- 更新 {filename}")
+
+    return "\n".join(lines)
 
 
 def generate_commit_messages(groups: Dict[str, List[str]]) -> Dict[str, str]:

@@ -51,10 +51,16 @@ def unstage_files(files: List[str]) -> bool:
 
 
 def create_commit(message: str) -> bool:
-    """Create a git commit with the given message."""
+    """Create a git commit with the given message (supports multi-line)."""
     try:
+        # Use -m multiple times for multi-line commit message
+        # First line is the subject, subsequent lines are the body
+        lines = message.split('\n')
+        cmd = ['git', 'commit']
+        for line in lines:
+            cmd.extend(['-m', line])
         subprocess.run(
-            ['git', 'commit', '-m', message],
+            cmd,
             capture_output=True,
             check=True
         )
