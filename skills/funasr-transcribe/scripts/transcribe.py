@@ -105,6 +105,18 @@ def batch_transcribe(directory: str, server_url: str = DEFAULT_SERVER,
     if not os.path.isdir(directory):
         return {"success": False, "error": f"目录不存在: {directory}"}
 
+    # 智能输出目录：如果输入目录的父文件夹名是纯数字，自动创建 "视频（已转录）/"
+    if output_dir is None:
+        dir_name = os.path.basename(directory)
+        parent_dir = os.path.dirname(directory)
+        parent_name = os.path.basename(parent_dir)
+
+        # 检测父文件夹名是否为纯数字（配合抖音下载技能）
+        if parent_name and parent_name.isdigit():
+            output_dir = os.path.join(parent_dir, "视频（已转录）")
+            os.makedirs(output_dir, exist_ok=True)
+            print(f"📁 自动创建输出目录: {output_dir}")
+
     payload = {
         "directory": directory,
         "diarize": diarize
@@ -151,6 +163,10 @@ def main():
 
   # 批量转录目录
   python transcribe.py /path/to/media_folder/ --batch
+
+  # 智能目录映射（配合抖音下载技能使用）
+  python transcribe.py /path/to/用户ID/视频/ --batch
+  # 自动输出到: /path/to/用户ID/视频（已转录）/
 
   # 指定服务地址
   python transcribe.py /path/to/audio.mp3 --server http://localhost:8765
