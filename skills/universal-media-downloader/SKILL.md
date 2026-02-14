@@ -48,6 +48,15 @@ license: MIT
 - 例如：
   - `--proxy "socks5://127.0.0.1:7890"`
 
+### 5）指定下载路径
+
+- 用户可通过自然语言指定保存位置，AI 应自动转换为 `--out-dir` 参数
+- 示例：
+  - 用户说"下载到桌面" → `--out-dir ~/Desktop`
+  - 用户说"保存到 Videos/bilibili" → `--out-dir "~/Videos/bilibili"`
+  - 用户说"下载到这个文件夹"（指定某路径）→ 使用用户指定的绝对路径
+- **注意**：确保目标目录存在，如不存在可自动创建
+
 ## 平台差异与限制（重要）
 
 - **YouTube/B站/抖音**：
@@ -67,6 +76,7 @@ license: MIT
 - `scripts/download_media.py`
   - 基于 `yt-dlp` 的通用下载器
   - 输出：成功时最后一行 `SAVED_FILEPATH=...`
+  - **AI 使用指引**：当用户指定保存路径时，自动使用 `--out-dir` 参数
   - 参数：
     - `url`（必填）
     - `--audio-only` / `--audio-format`
@@ -74,7 +84,7 @@ license: MIT
     - `--sub-lang`（可选，字幕语言，默认 all）
     - `--cookies`（可选）
     - `--proxy`（可选）
-    - `--out-dir`（可选）
+    - `--out-dir`（可选，自定义输出目录）
 
 ## 依赖
 
