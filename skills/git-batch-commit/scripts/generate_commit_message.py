@@ -38,6 +38,98 @@ CATEGORY_TO_TYPE = {
     'other': 'chore',
 }
 
+# 文件名/路径到功能描述的映射
+# 用于生成更有意义的提交详情，而不是只显示 "添加 class XXX"
+FILE_TO_FUNCTION_MAP = {
+    # 搜索与查询
+    r'search\.py$': '代码语义搜索模块（支持函数/类/导入/文档搜索）',
+    r'qa\.py$': '智能问答模块（意图分类 + 结构化回答生成）',
+    r'query\.py$': '查询构建器（生成结构化查询语句）',
+
+    # 分析器
+    r'parser\.py$': '解析器（文本/代码/数据解析）',
+    r'analyzer\.py$': '分析器（代码/数据/性能分析）',
+    r'architecture\.py$': '架构分析器（目录结构/模块划分/设计模式检测）',
+    r'quality\.py$': '代码质量分析器（注释覆盖率/技术债务/潜在问题检测）',
+
+    # 工具与辅助
+    r'utils\.py$': '通用工具函数库',
+    r'helpers\.py$': '辅助函数（特定场景的便捷方法）',
+    r'common\.py$': '公共模块（共享常量和函数）',
+
+    # 数据与类型
+    r'config\.py$': '配置管理模块（加载/解析/验证配置）',
+    r'models\.py$': '数据模型定义（ORM/Schema/Entity）',
+    r'types\.py$': '类型定义（Type Hints/Interfaces）',
+    r'constants\.py$': '常量定义（枚举/配置值/魔法数字）',
+    r'schemas\.py$': '数据 Schema 定义（验证规则/序列化）',
+
+    # 异常与验证
+    r'exceptions\.py$': '自定义异常类（错误码/错误消息）',
+    r'validators\.py$': '数据验证器（输入校验/格式检查）',
+
+    # 转换与处理
+    r'converters?\.py$': '数据转换器（格式转换/编码转换）',
+    r'formatters?\.py$': '格式化器（输出美化/模板渲染）',
+    r'renderers?\.py$': '渲染器（HTML/PDF/图片生成）',
+    r'generators?\.py$': '生成器（代码/文档/数据生成）',
+    r'extractors?\.py$': '提取器（从文本/网页/文件提取信息）',
+    r'transformers?\.py$': '数据转换管道（ETL/清洗/标准化）',
+
+    # 存储与加载
+    r'loaders?\.py$': '加载器（文件/网络/数据库加载）',
+    r'savers?\.py$': '保存器（持久化/导出/备份）',
+    r'storage\.py$': '存储层抽象（本地/云存储/缓存）',
+
+    # 处理与管理
+    r'handlers?\.py$': '事件处理器（HTTP/WebSocket/信号处理）',
+    r'managers?\.py$': '资源管理器（生命周期/连接池/状态）',
+    r'services?\.py$': '业务服务层（核心业务逻辑）',
+    r'processors?\.py$': '数据处理器（批处理/流处理/异步处理）',
+
+    # 网络与通信
+    r'clients?\.py$': 'API 客户端（HTTP/RPC/GraphQL）',
+    r'servers?\.py$': '服务端实现（路由/中间件/错误处理）',
+    r'api\.py$': 'API 接口定义（端点/参数/响应）',
+    r'routes?\.py$': '路由配置（URL 映射/参数提取）',
+    r'views?\.py$': '视图层（页面渲染/模板上下文）',
+    r'controllers?\.py$': '控制器（请求处理/响应封装）',
+    r'middleware\.py$': '中间件（请求/响应拦截器）',
+
+    # 安全与认证
+    r'auth\.py$': '认证模块（登录/登出/Token 管理）',
+    r'permissions?\.py$': '权限控制（角色/资源/操作检查）',
+    r'security\.py$': '安全模块（加密/签名/防护）',
+
+    # 数据库与缓存
+    r'database\.py$': '数据库连接管理（连接池/事务/会话）',
+    r'db\.py$': '数据库操作层（CRUD/查询构建）',
+    r'cache\.py$': '缓存层（Redis/Memcached/内存缓存）',
+    r'repository\.py$': '仓储层（数据访问抽象）',
+
+    # 日志与监控
+    r'logger\.py$': '日志模块（格式化/分级/输出）',
+    r'monitoring\.py$': '监控模块（指标收集/告警）',
+    r'metrics\.py$': '指标定义（计数器/仪表/直方图）',
+
+    # 测试
+    r'test.*\.py$': '单元测试/集成测试',
+    r'conftest\.py$': 'Pytest 配置与 Fixtures',
+    r'mock.*\.py$': 'Mock 对象与测试替身',
+
+    # 前端文件
+    r'\.tsx?$': 'TypeScript/React 前端组件',
+    r'\.vue$': 'Vue.js 组件（模板/脚本/样式）',
+    r'\.svelte$': 'Svelte 组件（编译时优化）',
+
+    # 配置和文档
+    r'__init__\.py$': 'Python 模块初始化（导出/版本）',
+    r'__main__\.py$': '命令行入口（python -m module）',
+    r'SKILL\.md$': 'Claude Code 技能定义文件',
+    r'CHANGELOG\.md$': '版本变更日志',
+    r'README\.md$': '项目说明文档',
+}
+
 
 def parse_skill_category(category: str):
     """
@@ -332,13 +424,68 @@ def analyze_markdown_changes(added: List[str], removed: List[str], filename: str
     return f"更新 {filename}"
 
 
+def get_function_description(filename: str) -> str:
+    """
+    根据文件名获取功能描述。
+
+    优先使用预定义的映射，如果没有匹配则返回 None。
+    """
+    for pattern, description in FILE_TO_FUNCTION_MAP.items():
+        if re.search(pattern, filename, re.IGNORECASE):
+            return description
+    return None
+
+
+def extract_class_names(added: List[str]) -> List[str]:
+    """提取新增的类名。"""
+    class_names = []
+    for line in added:
+        # Python: class ClassName:
+        match = re.search(r'class\s+(\w+)', line)
+        if match:
+            class_names.append(match.group(1))
+        # JavaScript/TypeScript: class ClassName {
+        match = re.search(r'class\s+(\w+)', line)
+        if match and match.group(1) not in class_names:
+            class_names.append(match.group(1))
+    return class_names
+
+
 def analyze_code_changes(added: List[str], removed: List[str], filename: str) -> str:
     """分析代码文件变更。"""
-    # Look for function/class definitions
-    added_funcs = [l for l in added if 'def ' in l or 'class ' in l or 'function ' in l]
+    # 先尝试获取功能描述
+    func_desc = get_function_description(filename)
+
+    # 提取新增的类名
+    added_classes = extract_class_names(added)
+    added_funcs = [l for l in added if 'def ' in l or 'function ' in l]
     added_imports = [l for l in added if 'import ' in l or 'from ' in l]
 
-    # Look for specific keywords
+    # 判断变更类型
+    is_new_file = len(added) > 10 and len(removed) < 5  # 新文件通常添加多行，删除很少
+    has_new_classes = len(added_classes) > 0
+    has_new_funcs = len(added_funcs) > 0
+
+    # 构建描述
+    if is_new_file:
+        if func_desc:
+            return f"新增 {func_desc}模块"
+        elif has_new_classes:
+            return f"新增 {added_classes[0]} 等类"
+        else:
+            return f"新增 {filename}"
+
+    if has_new_classes:
+        if func_desc:
+            # 结合功能描述和类名
+            if len(added_classes) == 1:
+                return f"更新 {func_desc} - 添加 {added_classes[0]} 类"
+            else:
+                return f"更新 {func_desc} - 添加 {len(added_classes)} 个类"
+        else:
+            return f"更新 {filename} - 添加 {added_classes[0]}"
+
+    # 检查关键词
     changes = []
     if any('fix' in l.lower() or 'bug' in l.lower() for l in added + removed):
         changes.append("修复问题")
@@ -347,13 +494,16 @@ def analyze_code_changes(added: List[str], removed: List[str], filename: str) ->
     if any('update' in l.lower() for l in added + removed):
         changes.append("更新功能")
 
-    if added_funcs:
-        func_name = added_funcs[0].strip()
-        return f"更新 {filename} - 添加 {func_name}"
-    elif changes:
+    if changes:
+        if func_desc:
+            return f"更新 {func_desc} - {'、'.join(changes)}"
         return f"更新 {filename} - {'、'.join(changes)}"
-    elif added_imports:
-        return f"更新 {filename} - 添加导入"
+
+    if added_imports and func_desc:
+        return f"更新 {func_desc} - 添加导入"
+
+    if func_desc:
+        return f"更新 {func_desc}"
 
     return f"更新 {filename} 代码"
 

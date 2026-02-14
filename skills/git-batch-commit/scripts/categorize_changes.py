@@ -104,6 +104,17 @@ SKILL_CORE_FILES = [
     r'skills/.*/SKILL\.md$', # Skill files in skills directory
 ]
 
+# Files that should ALWAYS be categorized separately, even inside skills/
+# These are cross-cutting concerns that apply to the whole project
+ALWAYS_SEPARATE_CATEGORIES = {
+    'license': [
+        r'LICENSE',
+        r'LICENSE\.txt',
+        r'LICENSE\.md',
+        r'COPYING',
+    ],
+}
+
 # Source code extensions
 SOURCE_EXTENSIONS = [
     r'\.py$', r'\.js$', r'\.ts$', r'\.tsx$', r'\.jsx$',
@@ -217,12 +228,29 @@ def extract_skill_name(filepath: str) -> str:
     return None
 
 
+def check_always_separate(filepath: str) -> str:
+    """
+    Check if file should always be categorized separately, even inside skills/.
+
+    Returns the category if matched, None otherwise.
+    """
+    for category, patterns in ALWAYS_SEPARATE_CATEGORIES.items():
+        for pattern in patterns:
+            if re.search(pattern, filepath):
+                return category
+    return None
+
+
 def group_changes(files: List[str], staged: bool = True) -> Dict[str, List[str]]:
     """
     Group files by category.
 
     Special handling for skill directories: all files under the same skill
     directory are grouped together as they represent a single logical change.
+
+    IMPORTANT: Some files (like LICENSE) are ALWAYS categorized separately,
+    even if they are inside a skill directory. This ensures that cross-cutting
+    concerns like licensing changes get their own focused commits.
 
     Args:
         files: List of file paths
@@ -236,6 +264,14 @@ def group_changes(files: List[str], staged: bool = True) -> Dict[str, List[str]]
 
     # First pass: separate skill files from others
     for filepath in files:
+        # Check if file should ALWAYS be separate (e.g., LICENSE)
+        separate_category = check_always_separate(filepath)
+        if separate_category:
+            if separate_category not in groups:
+                groups[separate_category] = []
+            groups[separate_category].append(filepath)
+            continue
+
         skill_name = extract_skill_name(filepath)
         if skill_name:
             if skill_name not in skill_groups:
