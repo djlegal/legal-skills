@@ -1,5 +1,43 @@
 # 变更日志
 
+## [0.4.0] - 2026-02-14
+
+### 新增功能
+
+借鉴 Zread MCP 实现思路，增强本地分析能力：
+
+- **代码语义搜索**: 支持搜索函数、类、导入、文档等多种模式
+  - 新增 `scripts/search.py` 模块
+  - 支持 Python, JavaScript, TypeScript, Go, Rust, Java
+  - 使用 Grep 工具进行模式匹配
+
+- **深度代码分析**: 超越基础分析，提供架构和质量层面的深度洞察
+  - 新增 `scripts/analyzer/` 模块
+  - **架构分析**: 目录结构、模块划分、入口文件、架构模式检测（MVC、微服务、插件、monorepo）
+  - **质量分析**: 代码统计、注释覆盖率、技术债务检测（TODO、FIXME）、问题检测（硬编码密钥、console.log）
+
+- **智能问答**: 利用 Claude Code 的 LLM 能力，回答关于仓库的自然语言问题
+  - 新增 `scripts/qa.py` 模块
+  - 问题意图分类: overview, architecture, usage, api, dependencies
+  - 结构化回答模板
+
+### 改进优化
+
+- 更新 SKILL.md，添加高级功能章节
+- 文档完善：详细说明各功能的使用方法和触发条件
+
+### 文件变更
+
+- 新增: `scripts/__init__.py`
+- 新增: `scripts/search.py`
+- 新增: `scripts/qa.py`
+- 新增: `scripts/analyzer/__init__.py`
+- 新增: `scripts/analyzer/architecture.py`
+- 新增: `scripts/analyzer/quality.py`
+- 更新: `SKILL.md`
+
+---
+
 ## [0.3.0] - 2026-02-11
 
 ### 新增功能

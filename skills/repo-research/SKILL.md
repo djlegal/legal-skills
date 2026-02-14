@@ -769,3 +769,160 @@ glob "tests/**/*"     # 测试
 - **report-template.md**: 单仓库报告模板
 - **comparison-template.md**: 多仓库对比报告模板
 - **topic-research-template.md**: 主题驱动搜索研究报告模板（新增）
+
+---
+
+## 高级功能 (v0.4.0)
+
+借鉴 Zread MCP 的实现思路，增强本地分析能力。
+
+### 1. 代码语义搜索
+
+利用本地已克隆的仓库，进行深度代码搜索。
+
+#### 触发方式
+
+用户表达以下需求时激活：
+- "搜索函数 X"
+- "查找类 Y"
+- "看看这个项目怎么实现 Z 的"
+- 直接使用 `--search` 参数
+
+#### 使用方法
+
+```bash
+# 搜索函数定义
+/repo-research https://github.com/user/repo --search="function:parse*"
+
+# 搜索类定义
+/repo-research https://github.com/user/repo --search="class:*Handler"
+
+# 搜索导入
+/repo-research https://github.com/user/repo --search="import:react"
+
+# 搜索特定模式
+/repo-research https://github.com/user/repo --search="pattern:console\.log"
+```
+
+#### 内部实现
+
+调用 `scripts/search.py` 中的 `CodeSearcher` 类：
+- 使用 Grep 工具进行模式匹配
+- 支持多种语言：Python, JavaScript, TypeScript, Go, Rust, Java
+- 支持多种模式：function, class, import, doc, pattern
+
+---
+
+### 2. 深度代码分析
+
+超越基础分析，提供架构和质量层面的深度洞察。
+
+#### 分析类型
+
+| 类型 | 描述 | 触发参数 |
+|:-----|:-----|:---------|
+| **架构分析** | 目录结构、模块划分、入口文件、架构模式 | `--analyze=architecture` |
+| **质量分析** | 代码统计、注释率、技术债务、潜在问题 | `--analyze=quality` |
+| **完整分析** | 包含架构和质量两个维度 | `--analyze=full` |
+
+#### 使用方法
+
+```bash
+# 架构分析
+/repo-research https://github.com/user/repo --analyze=architecture
+
+# 质量分析
+/repo-research https://github.com/user/repo --analyze=quality
+
+# 完整分析
+/repo-research https://github.com/user/repo --analyze=full
+```
+
+#### 内部实现
+
+- **架构分析器** (`scripts/analyzer/architecture.py`):
+  - 目录结构分析
+  - 入口文件识别
+  - 模块/包结构识别
+  - 配置文件检测
+  - 架构模式检测（MVC、微服务、插件、monorepo）
+
+- **质量分析器** (`scripts/analyzer/quality.py`):
+  - 代码统计（行数、语言分布）
+  - 注释覆盖率分析
+  - 技术债务检测（TODO、FIXME、deprecated）
+  - 问题检测（硬编码密钥、console.log、大文件）
+
+---
+
+### 3. 智能问答
+
+利用 Claude Code 的 LLM 能力，回答关于仓库的自然语言问题。
+
+#### 触发方式
+
+用户表达以下需求时激活：
+- "这个项目是做什么的？"
+- "如何使用这个项目？"
+- "架构是怎样的？"
+- "有哪些主要模块？"
+- 直接使用 `--ask` 参数
+
+#### 使用方法
+
+```bash
+# 询问项目概述
+/repo-research https://github.com/user/repo --ask="这个项目是做什么的？"
+
+# 询问使用方法
+/repo-research https://github.com/user/repo --ask="如何使用这个项目？"
+
+# 询问架构
+/repo-research https://github.com/user/repo --ask="架构是怎样的？"
+```
+
+#### 内部实现
+
+1. **问题分类** (`scripts/qa.py` 中的 `QuestionClassifier`):
+   - 意图识别：overview, architecture, usage, api, dependencies
+   - 实体提取：功能名、组件名、文件名
+   - 上下文确定：需要读取哪些文件
+
+2. **回答生成**:
+   - 使用 Grep/Glob 搜索相关代码
+   - 使用 read_file 读取关键文件
+   - 结合 Claude Code 的 LLM 能力生成自然语言回答
+
+---
+
+### 4. 组合使用
+
+高级功能可以组合使用，实现更强大的分析能力：
+
+```bash
+# 搜索 + 分析
+/repo-research https://github.com/user/repo --search="function:parse*" --analyze=architecture
+
+# 问答 + 报告
+/repo-research https://github.com/user/repo --ask="这个项目如何使用？" --output=report
+```
+
+---
+
+### scripts/ 目录结构
+
+```
+scripts/
+├── __init__.py           # 模块导出
+├── search.py             # 语义搜索
+├── qa.py                 # 智能问答
+├── architecture.py       # 架构分析
+└── quality.py            # 质量分析
+```
+
+### 未来计划
+
+- [ ] 依赖分析模块 (dependency analysis)
+- [ ] 安全分析模块 (security analysis)
+- [ ] 性能分析模块 (performance analysis)
+- [ ] 更智能的问答系统
