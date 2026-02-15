@@ -595,20 +595,24 @@ def infer_intent_from_function_name(func_name: str) -> str | None:
             if len(rest) < 4:
                 return action
 
-            # 智能处理剩余部分 - 提取中间有意义的部分
+            # 智能处理剩余部分 - 如果剩余部分包含新功能的特征词，直接返回简洁动作
             if rest:
+                # 常见的"新功能"类词组，这些情况下直接返回简洁动作
+                simple_suffixes = ('new', 'test', 'feature', 'item')
+                if rest.lower().endswith(simple_suffixes) or rest.lower() in simple_suffixes:
+                    return action
+
                 # 按下划线分割
                 parts = rest.split('_')
-                # 如果有多个部分，取中间有意义的部分
-                if len(parts) > 1:
-                    # 去掉第一部分（通常是动词）和常见后缀
-                    meaningful = [p for p in parts[1:]
-                                  if p.lower() not in ('name', 'file', 'path', 'content',
-                                                     'data', 'message', 'lines', 'from',
-                                                     'function', 'the', 'a', 'an', 'list')]
-                    if meaningful:
-                        readable = meaningful[0]  # 取第一个有意义的词
-                        return f"{action}({readable})"
+                # 过滤掉常见词，保留核心名词
+                filtered = [p for p in parts
+                           if p.lower() not in ('name', 'file', 'path', 'content',
+                                              'data', 'message', 'lines', 'from',
+                                              'function', 'the', 'a', 'an', 'list',
+                                              'new', 'test', 'feature')]
+                if filtered:
+                    readable = filtered[0]  # 取第一个有意义的词
+                    return f"{action}({readable})"
 
             return action
     return None
@@ -837,3 +841,12 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+def detect_new_feature():
+    '''Test function for detection'''
+    pass
+
+def extract_test_data():
+    '''Another test function'''
+    pass
+
