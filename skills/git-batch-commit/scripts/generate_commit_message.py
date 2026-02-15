@@ -666,14 +666,14 @@ def analyze_code_changes(added: List[str], removed: List[str], filename: str) ->
         intent = infer_intent_from_function_name(added_funcs[0])
         if intent:
             if len(added_funcs) == 1:
-                return f"更新 - {intent}"
+                return intent  # 直接返回意图，如 "添加推断功能"
             else:
                 # 多个函数时，尝试推断所有函数的意图
                 intents = [infer_intent_from_function_name(f) for f in added_funcs]
                 valid_intents = [i for i in intents if i]
                 if valid_intents:
-                    return f"更新 - {valid_intents[0]}，共 {len(added_funcs)} 个函数"
-                return f"更新 - 添加 {len(added_funcs)} 个函数"
+                    return f"{valid_intents[0]}，共 {len(added_funcs)} 个函数"
+                return f"添加 {len(added_funcs)} 个函数"
 
         # 如果没有语义匹配，使用原来的描述
         if func_desc:
